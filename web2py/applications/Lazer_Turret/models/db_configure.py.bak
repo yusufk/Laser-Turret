@@ -1,0 +1,89 @@
+# coding: utf8
+from datetime import datetime
+from gluon.storage import Storage
+class Configure():
+    """
+    This class implements a configurable set of options
+    for use in anything that needs settings that
+    are to be stored in the database.
+    """
+    def __init__(self, auto_define=True, migrate=True, cache=None):
+        """
+        Initialize configure class.
+
+        Keyword arugments:
+        database -- web2py DAL instance
+        auto_define -- auto define database tables (default: True)
+        migrate -- migrate the database tables (default: True)
+        cache -- cache object to use for pulling database settings,
+                this is a tuple object consisting of cache object
+                and cache timeout. Default No Cache!
+                (Cache(r).ram, 1500)
+        """
+        self.cache = cache
+        if auto_define:
+            self.define_tables(migrate=migrate)
+            self._get_settings()
+
+    def define_tables(self, migrate=True):
+        """
+        Defines the database tables needed to function
+        """
+        db.define_table('settings',
+            Field('sname'),
+            Field('svalue', 'text'),
+            Field('description', 'text'),
+            Field('created', 'datetime', default=datetime.now(), writable=False, readable=False),
+            Field('modified', 'datetime', default=datetime.now(), writable=False, readable=False),
+            migrate=migrate
+        )
+
+    def _get_settings(self):
+        """
+        Retreives the settings from the database and
+        stores them in a storage dictionary
+        """
+        settings = Storage()
+        rows = db(db.settings.id > 0).select(cache=self.cache)
+        for row in rows:
+            settings[row.sname] = row
+        self.settings = settings
+
+    def verify(self, settings):
+        """
+        Adds the configuration to memory, and assures that the
+        configuration exists in the database (DAL for web2py).
+
+        If there are no database entries, it will create the table,
+        and fill in the default svalues, otherwise it will poll
+        the database for the information.
+
+        Keyword arguments:
+        items -- dictionary of configs to store into the database.
+                in the format of
+                {'sname': 'svalue'}
+        """
+        for sname, info in settings.iteritems():
+            row = db(db.settings.sname == sname).select().first()
+            if not row:
+                self.settings[sname] = db.settings.insert(sname=sname, svalue=info.get('svalue', None), description=info.get('description', None))
+
+
+    def read(self, sname):
+        """
+        Returns the svalue of a settings object
+
+        Keyword arguments:
+        sname -- setting sname
+        """
+        return self.settings[sname].svalue
+
+    def write(self, sname, svalue):
+        """
+        Writes a setting to the database
+
+        Keyword arguments:
+        sname -- setting sname
+        svalue -- svalue for the setting
+        """
+        self.settings[sname].update_record(svalue=svalue, modified=datetime.now())

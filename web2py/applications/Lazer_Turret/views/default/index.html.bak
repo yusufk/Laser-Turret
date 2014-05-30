@@ -1,0 +1,19 @@
+{{extend 'layout.html'}}
+<h1>Turret control</h1>
+<table>
+<tr>
+    <td></td>
+    <td align="center"><button onclick = '"{{=URL('default/call/run', 'move', args="90x180y")}};">UP</button></td>
+    <td></td>
+</tr>
+<tr>
+    <td><button onclick = '"{{=URL('default/call/run', 'move', args="0x90y")}}";'>LEFT</button></td>
+    <td><button onclick = '"{{=URL('default/call/run', 'move', args="a")}}";'>Fire</button></td>
+    <td><button onclick = '"{{=URL('default/call/run', 'move', args="180x90y")}}";'>RIGHT</button></td>
+</tr>
+<tr>
+    <td></td>
+    <td><button onclick = '"{{=URL('default/call/run', 'move', args="90x0y")}}";'>DOWN</button></td>
+    <td></td>
+</tr>
+</table>
